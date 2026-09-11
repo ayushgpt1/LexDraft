@@ -1,3 +1,7 @@
+def normalize_move_type(move_type):
+    return move_type.strip().upper().replace(" ", "_")
+
+
 def map_content(case_data):
     mapped_points = []
 
