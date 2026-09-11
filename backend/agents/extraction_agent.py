@@ -4,11 +4,13 @@ from backend.models.schemas import CaseInformation
 
 
 class ExtractionAgent:
+
     def __init__(self, client, model):
         self.client = client
         self.model = model
 
     def run(self, case_text):
+
         schema = CaseInformation.model_json_schema()
 
         system_prompt = f"""
@@ -51,4 +53,6 @@ Extract the structured case information from this document:
             temperature=0
         )
 
-        return response.choices[0].message.content
+        raw_output = response.choices[0].message.content
+
+        return raw_output

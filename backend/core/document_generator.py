@@ -710,3 +710,13 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
     print(
         f"Document created successfully: {output_path}"
     )
+def extract_docx_text(file_path):
+    document = Document(file_path)
+
+    paragraphs = [
+        paragraph.text
+        for paragraph in document.paragraphs
+        if paragraph.text.strip()
+    ]
+
+    return "\n".join(paragraphs) 

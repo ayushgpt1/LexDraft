@@ -1,7 +1,5 @@
 import json
 
-from backend.models.schemas import GeneratedParagraphs
-
 
 class GenerationAgent:
     def __init__(self, client, model):

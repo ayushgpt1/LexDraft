@@ -1,21 +1,15 @@
 def map_content(case_data):
-    """
-    Maps structured case information into the content structure
-    required by the Affidavit in Reply generation stage.
-    """
-
     mapped_points = []
 
-    for reply_point in case_data.reply_points:
+    for point in case_data.reply_points:
         mapped_points.append({
-            "paragraph_number": reply_point.point_number,
-            "move_type": reply_point.move_type,
-            "content": reply_point.content
+            "paragraph_number": point.point_number,
+            "move_type": normalize_move_type(point.move_type),
+            "content": point.content
         })
 
     return {
-        "document_type": case_data.document_type,
-        "court": case_data.court,
+        "forum_heading": case_data.court,
         "jurisdiction": case_data.jurisdiction,
         "proceeding_type": case_data.proceeding_type,
         "case_number": case_data.case_number,

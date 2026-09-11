@@ -24,31 +24,36 @@ class ReplyPoint(BaseModel):
 
 class CaseInformation(BaseModel):
     document_type: str
+
+    # Court and case
     court: str
     jurisdiction: str
     proceeding_type: str
     case_number: str
     year: int
+
+    # Parties
     petitioner: str
     respondents: List[Respondent]
     answering_respondent_number: int
+
+    # Deponent
     deponent: Deponent
+
+    # Reply
     reply_points: List[ReplyPoint]
+
+    # Prayer
     prayer: List[str]
+
+    # Attestation
     verification_verb: str
     place: str
     date: str
+
+    # Advocate
     advocate_firm: Optional[str] = None
     advocate_for: Optional[str] = None
-
-
-class GeneratedParagraph(BaseModel):
-    paragraph_number: int
-    content: str
-
-
-class GeneratedParagraphs(BaseModel):
-    paragraphs: List[GeneratedParagraph]
 
 
 class EvaluationCriterion(BaseModel):
@@ -64,9 +69,3 @@ class EvaluationReport(BaseModel):
     hallucination: EvaluationCriterion
     template_fidelity: EvaluationCriterion
     overall_issues: List[str] = Field(default_factory=list)
-
-
-class FinalEvaluationReport(BaseModel):
-    deterministic_score: float
-    deterministic_checks: List[dict]
-    llm_evaluation: EvaluationReport
