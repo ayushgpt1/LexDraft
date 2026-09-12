@@ -221,23 +221,23 @@ async def generate_affidavit(
                 except Exception:
                     pass
 
-        # Persist the actual evaluation result returned by the
-        # EvaluationAgent (reused as-is; no second evaluation and no
-        # additional LLM call). The outputs directory is created on
-        # demand so the artifact always has a valid JSON home.
-        evaluation_report = result["evaluation_report"].model_dump()
+    # Persist the actual evaluation result returned by the
+    # EvaluationAgent (reused as-is; no second evaluation and no
+    # additional LLM call). The outputs directory is created on
+    # demand so the artifact always has a valid JSON home.
+    evaluation_report = result["evaluation_report"].model_dump()
 
-        OUTPUT_DIR.mkdir(exist_ok=True)
+    OUTPUT_DIR.mkdir(exist_ok=True)
 
-        evaluation_report_path = OUTPUT_DIR / "evaluation_report.json"
+    evaluation_report_path = OUTPUT_DIR / "evaluation_report.json"
 
-        evaluation_report_path.write_text(
-            json.dumps(
-                evaluation_report,
-                indent=2
-            ),
-            encoding="utf-8"
-        )
+    evaluation_report_path.write_text(
+        json.dumps(
+            evaluation_report,
+            indent=2
+        ),
+        encoding="utf-8"
+    )
 
     return {
         "message": "Affidavit generated successfully",
