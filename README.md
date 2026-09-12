@@ -114,7 +114,8 @@ Reference PDF ──► PyMuPDF ──► reference_text ───────�
    5 dimensions and lists specific issues per dimension.
 8. **Return & Persist** — The backend returns the full result as JSON and saves
    `outputs/evaluation_report.json`. The frontend displays the extracted case information, affidavit
-   preview, evaluation summary, deterministic checks, and issues. The user can download the DOCX.
+   preview, evaluation summary, deterministic checks, and issues. Users can download the generated
+   Affidavit in Reply DOCX. The evaluation report is displayed in the frontend.
 
 ---
 
