@@ -284,6 +284,7 @@ function App() {
 
             <section>
               <AffidavitPreview
+                caseData={result.case_data}
                 paragraphs={result.generated_paragraphs.paragraphs}
                 onDownload={handleDownload}
               />
@@ -333,3 +334,4 @@ function App() {
 }
 
 export default App;
+

@@ -14,12 +14,14 @@ export function ProcessingPipeline({ stages }: ProcessingPipelineProps) {
         <h2 className="text-base font-semibold text-foreground mb-6">
           Processing
         </h2>
-        <div className="space-y-1">
-          {stages.map((stage, index) => {
-            const isLast = index === stages.length - 1;
+        <div className="flex flex-row gap-2 overflow-x-auto">
+          {stages.map((stage) => {
             return (
-              <div key={stage.id} className="flex gap-4">
-                <div className="flex flex-col items-center">
+              <div
+                key={stage.id}
+                className="flex-1 min-w-0 flex flex-col items-center"
+              >
+                <div className="flex items-center gap-2 min-w-0">
                   <div
                     className={cn(
                       'flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors',
@@ -46,21 +48,9 @@ export function ProcessingPipeline({ stages }: ProcessingPipelineProps) {
                       <Circle className="h-3 w-3" />
                     )}
                   </div>
-                  {!isLast && (
-                    <div
-                      className={cn(
-                        'w-0.5 flex-1 min-h-[2rem] transition-colors',
-                        stage.status === 'completed'
-                          ? 'bg-success'
-                          : 'bg-border'
-                      )}
-                    />
-                  )}
-                </div>
-                <div className="pb-6 pt-1.5">
                   <p
                     className={cn(
-                      'text-sm font-medium transition-colors',
+                      'text-sm font-medium transition-colors min-w-0',
                       stage.status === 'completed' && 'text-foreground',
                       stage.status === 'processing' && 'text-foreground',
                       stage.status === 'error' && 'text-foreground',
@@ -69,23 +59,23 @@ export function ProcessingPipeline({ stages }: ProcessingPipelineProps) {
                   >
                     {stage.label}
                   </p>
-                  {stage.status === 'processing' && (
-                    <p className="text-xs text-muted-foreground mt-0.5 animate-pulse-soft">
-                      Processing
-                    </p>
-                  )}
-                  {stage.status === 'completed' && (
-                    <p className="text-xs text-success mt-0.5">Complete</p>
-                  )}
-                  {stage.status === 'error' && (
-                    <p className="text-xs text-destructive mt-0.5">Error</p>
-                  )}
-                  {stage.status === 'pending' && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Waiting
-                    </p>
-                  )}
                 </div>
+                {stage.status === 'processing' && (
+                  <p className="text-xs text-muted-foreground mt-0.5 animate-pulse-soft">
+                    Processing
+                  </p>
+                )}
+                {stage.status === 'completed' && (
+                  <p className="text-xs text-success mt-0.5">Complete</p>
+                )}
+                {stage.status === 'error' && (
+                  <p className="text-xs text-destructive mt-0.5">Error</p>
+                )}
+                {stage.status === 'pending' && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Waiting
+                  </p>
+                )}
               </div>
             );
           })}
