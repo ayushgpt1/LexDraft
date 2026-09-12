@@ -1,7 +1,7 @@
 // ---------- Backend response types ----------
 // These mirror backend/models/schemas.py, backend/core/orchestrator.py
 // and backend/validation/validators.py exactly as returned by
-// POST http://127.0.0.1:8000/generate (snake_case field names).
+// POST /generate (snake_case field names).
 
 export interface Respondent {
   number: number;

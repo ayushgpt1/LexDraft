@@ -1,7 +1,7 @@
 import type { GenerateResponse, ProgressEvent } from './types';
 
 // Local FastAPI backend (backend/main.py)
-export const API_BASE_URL = 'http://127.0.0.1:8000';
+export const API_BASE_URL = 'https://lexdraft-ged1.onrender.com';
 export const WS_BASE_URL = API_BASE_URL
   .replace('http://', 'ws://')
   .replace('https://', 'wss://');
@@ -91,8 +91,7 @@ export async function generateAffidavit(
     });
   } catch {
     throw new Error(
-      'Could not reach the LexDraft backend at http://127.0.0.1:8000. ' +
-        'Make sure it is running (uvicorn backend.main:app --reload).'
+      'Could not reach the LexDraft backend. Please try again.'
     );
   }
 
@@ -169,8 +168,7 @@ export async function downloadDocx(): Promise<void> {
     response = await fetch(`${API_BASE_URL}/download`);
   } catch {
     throw new Error(
-      'Could not reach the LexDraft backend at http://127.0.0.1:8000. ' +
-        'Make sure it is running (uvicorn backend.main:app --reload).'
+      'Could not reach the LexDraft backend. Please try again.'
     );
   }
 
