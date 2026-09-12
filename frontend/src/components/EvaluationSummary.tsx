@@ -1,14 +1,14 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ShieldCheck, Brain } from 'lucide-react';
-import type { EvaluationReport, DeterministicValidationResult } from '@/lib/types';
+import type { DeterministicScore, EvaluationReport } from '@/lib/types';
 
 interface EvaluationSummaryProps {
   report: EvaluationReport;
-  validation: DeterministicValidationResult;
+  deterministic: DeterministicScore;
 }
 
-export function EvaluationSummary({ report, validation }: EvaluationSummaryProps) {
+export function EvaluationSummary({ report, deterministic }: EvaluationSummaryProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Card>
@@ -20,14 +20,14 @@ export function EvaluationSummary({ report, validation }: EvaluationSummaryProps
             </h3>
           </div>
           <p className="text-3xl font-bold text-foreground">
-            {report.deterministicScore}
+            {Math.round(deterministic.score)}
             <span className="text-lg text-muted-foreground">%</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1.5">
-            {validation.passedCount} / {validation.totalCount} checks passed
+            {deterministic.passed_checks} / {deterministic.total_checks} checks passed
           </p>
           <Progress
-            value={report.deterministicScore}
+            value={deterministic.score}
             className="mt-3 h-1.5"
           />
         </CardContent>
@@ -42,14 +42,14 @@ export function EvaluationSummary({ report, validation }: EvaluationSummaryProps
             </h3>
           </div>
           <p className="text-3xl font-bold text-foreground">
-            {report.llmScore}
-            <span className="text-lg text-muted-foreground">
-              {' '}/ {report.llmMaxScore}
-            </span>
+            {report.overall_score}
+            <span className="text-lg text-muted-foreground">%</span>
           </p>
-          <div className="h-5" />
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Overall score across all evaluation criteria
+          </p>
           <Progress
-            value={(report.llmScore / report.llmMaxScore) * 100}
+            value={report.overall_score}
             className="mt-3 h-1.5"
           />
         </CardContent>

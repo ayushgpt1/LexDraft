@@ -1,5 +1,8 @@
 import json
 
+from google.genai import types
+
+from backend.core.llm_output import clean_json_output
 from backend.models.schemas import EvaluationReport
 
 
@@ -122,19 +125,15 @@ If there are no issues for a criterion, return an empty issues list.
 Return ONLY the JSON evaluation report.
 """
 
-        response = self.client.chat.completions.create(
+        response = self.client.models.generate_content(
             model=self.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
+            contents=[
+                user_prompt
             ],
-            temperature=0
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=0
+            )
         )
 
-        return response.choices[0].message.content 
+        return clean_json_output(response.text)

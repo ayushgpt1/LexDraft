@@ -191,6 +191,23 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
         return formatted
 
 
+    def get_jurat_affirmation(verification_verb):
+
+        # Reference verb agreement rule:
+        # "solemnly affirm"  -> "Solemnly affirmed"
+        # "swear and affirm" -> "Sworn"
+        #
+        # The jurat verb must correspond to the
+        # verification verb used in the deponent clause.
+
+        verb = verification_verb.strip().lower()
+
+        if "swear" in verb:
+            return "Sworn"
+
+        return "Solemnly affirmed"
+
+
     formatted_date = format_legal_date(
         case_data.date
     )
@@ -200,15 +217,19 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
     # 1. COURT HEADING
     # =========================================================
 
+    # ALL CAPS required regardless of extraction
+    # casing. City is never hardcoded; it comes
+    # from the extracted court value.
+
     add_centered(
-        case_data.court,
+        case_data.court.upper(),
         bold=True,
         before=0,
         after=0
     )
 
     add_centered(
-        case_data.jurisdiction,
+        case_data.jurisdiction.upper(),
         bold=True,
         before=0,
         after=0
@@ -217,7 +238,7 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
     # FIX #1:
     # Increased spacing AFTER case number
     add_centered(
-        f"{case_data.proceeding_type} NO. "
+        f"{case_data.proceeding_type.upper()} NO. "
         f"{case_data.case_number} OF {case_data.year}",
         bold=True,
         before=0,
@@ -330,14 +351,58 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
 
     deponent = case_data.deponent
 
+    # Reference deponent rule (Part 6):
+    #   Person respondent       -> "the Respondent No.[N] above named"
+    #   Organisation respondent -> "the [DESIGNATION] of the
+    #                              Respondent No.[N] above named"
+    #
+    # The deponent is an officer deposing for an
+    # organisation/authority only when the organisation
+    # field is supplied. In that case the officer must NOT
+    # be described personally as the Respondent No.[N].
+
+    if deponent.organisation and deponent.designation:
+
+        is_organisation_deponent = True
+
+        capacity_phrase = (
+            f"the {deponent.designation} of the "
+            f"Respondent No."
+            f"{case_data.answering_respondent_number} "
+            f"above named"
+        )
+
+    else:
+
+        is_organisation_deponent = False
+
+        capacity_phrase = (
+            f"the Respondent No."
+            f"{case_data.answering_respondent_number} "
+            f"above named"
+        )
+
+    deponent_parts = [f"I, {deponent.name}"]
+
+    # Template fidelity: the designation must appear only
+    # ONCE in the deponent clause. For an organisation
+    # deponent it is already stated inside the capacity
+    # phrase ("the [DESIGNATION] of the Respondent No.[N]
+    # above named"), so it is not repeated after the name.
+    # For a person respondent it is stated after the name.
+
+    if deponent.designation and not is_organisation_deponent:
+        deponent_parts.append(deponent.designation)
+
+    if deponent.address:
+        deponent_parts.append(f"residing at {deponent.address}")
+
+    deponent_parts.append(capacity_phrase)
+
     deponent_text = (
-        f"I, {deponent.name}, "
-        f"{deponent.designation}, "
-        f"residing at {deponent.address}, "
-        f"the Respondent No."
-        f"{case_data.answering_respondent_number} "
-        f"above named, do hereby solemnly affirm "
-        f"and state as under:"
+        ", ".join(deponent_parts)
+        + f", do hereby {case_data.verification_verb} "
+        + "and state as under:"
     )
 
     # FIX #2:
@@ -389,7 +454,9 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
             r"EXHIBIT"
             r"[-‐-‒–—]"
             r"\s*"
-            r"[‘']A[’']"
+            r"[‘']"
+            r"[A-Z0-9]+"
+            r"[’']"
         )
 
         match = re.search(
@@ -478,6 +545,13 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
     )
 
 
+    # The reference format prescribes a fixed three-item Prayer
+    # structure: (a), (b) and (c). It is generated programmatically
+    # here, never by the LLM. The proceeding type is the only
+    # case-specific portion. case_data.prayer remains extracted
+    # case information but does not control the number of standard
+    # Prayer items rendered in the final document.
+
     prayer_items = [
 
         (
@@ -542,7 +616,7 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
     # =========================================================
 
     add_paragraph(
-        f"Solemnly affirmed at "
+        f"{get_jurat_affirmation(case_data.verification_verb)} at "
         f"{case_data.place}",
         alignment=WD_ALIGN_PARAGRAPH.LEFT,
         before=18,
@@ -670,33 +744,41 @@ def build_affidavit_docx(case_data, generated_paragraphs, output_path):
     # 10. ADVOCATE BLOCK
     # =========================================================
 
-    p = doc.add_paragraph()
+    # Not a prescribed mandatory section in the reference
+    # format, but it IS supported by supplied case data.
+    # Generate only when the advocate fields exist; never
+    # invent an advocate firm.
 
-    format_paragraph(
-        p,
-        alignment=WD_ALIGN_PARAGRAPH.JUSTIFY,
-        before=0,
-        after=0,
-        line_spacing=1.0,
-        left_indent=0.115
-    )
+    if case_data.advocate_firm:
 
-    run = p.add_run(
-        case_data.advocate_firm
-    )
+        p = doc.add_paragraph()
 
-    format_run(
-        run,
-        bold=True
-    )
+        format_paragraph(
+            p,
+            alignment=WD_ALIGN_PARAGRAPH.JUSTIFY,
+            before=0,
+            after=0,
+            line_spacing=1.0,
+            left_indent=0.115
+        )
 
+        run = p.add_run(
+            case_data.advocate_firm
+        )
 
-    add_justified(
-        f"Advocate for {case_data.advocate_for}",
-        before=5.5,
-        after=0,
-        line_spacing=1.0
-    )
+        format_run(
+            run,
+            bold=True
+        )
+
+        if case_data.advocate_for:
+
+            add_justified(
+                f"Advocate for {case_data.advocate_for}",
+                before=5.5,
+                after=0,
+                line_spacing=1.0
+            )
 
 
     # =========================================================

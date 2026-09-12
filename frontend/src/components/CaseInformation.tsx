@@ -20,6 +20,11 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function OptionalField({ label, value }: { label: string; value: string | null }) {
+  if (!value) return null;
+  return <Field label={label} value={value} />;
+}
+
 export function CaseInformation({ data }: CaseInformationProps) {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -33,7 +38,7 @@ export function CaseInformation({ data }: CaseInformationProps) {
           <div className="flex items-center gap-2.5">
             <Info className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-base font-semibold text-foreground">
-              Case Information
+              Extracted Case Information
             </h2>
           </div>
           <ChevronDown
@@ -47,30 +52,41 @@ export function CaseInformation({ data }: CaseInformationProps) {
         {isOpen && (
           <div className="px-6 pb-6">
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-              <Field label="Document Type" value={data.documentType} />
+              <Field label="Document Type" value={data.document_type} />
               <Field label="Court" value={data.court} />
               <Field label="Jurisdiction" value={data.jurisdiction} />
-              <Field label="Proceeding Type" value={data.proceedingType} />
-              <Field label="Case Number" value={data.caseNumber} />
+              <Field label="Proceeding Type" value={data.proceeding_type} />
+              <Field label="Case Number" value={data.case_number} />
               <Field label="Year" value={data.year} />
               <Field label="Petitioner" value={data.petitioner} />
               <Field
                 label="Respondents"
                 value={
                   <ol className="list-decimal list-inside space-y-0.5">
-                    {data.respondents.map((r, i) => (
-                      <li key={i}>{r}</li>
+                    {data.respondents.map((respondent) => (
+                      <li key={respondent.number}>
+                        {respondent.name}{' '}
+                        <span className="text-muted-foreground">
+                          (No. {respondent.number})
+                        </span>
+                      </li>
                     ))}
                   </ol>
                 }
               />
-              <Field label="Answering Respondent" value={data.answeringRespondent} />
-              <Field label="Deponent" value={data.deponent} />
-              <Field label="Designation" value={data.designation} />
-              <Field label="Organisation" value={data.organisation} />
-              <Field label="Address" value={data.address} />
+              <Field
+                label="Answering Respondent"
+                value={`Respondent No. ${data.answering_respondent_number}`}
+              />
+              <Field label="Deponent" value={data.deponent.name} />
+              <OptionalField label="Designation" value={data.deponent.designation} />
+              <OptionalField label="Organisation" value={data.deponent.organisation} />
+              <OptionalField label="Address" value={data.deponent.address} />
+              <Field label="Verification" value={data.verification_verb} />
               <Field label="Place" value={data.place} />
               <Field label="Date" value={data.date} />
+              <OptionalField label="Advocate Firm" value={data.advocate_firm} />
+              <OptionalField label="Advocate For" value={data.advocate_for} />
             </dl>
 
             <div className="mt-6 pt-4 border-t border-border">
@@ -78,17 +94,30 @@ export function CaseInformation({ data }: CaseInformationProps) {
                 Reply Points
               </dt>
               <div className="flex flex-wrap gap-2">
-                {data.replyPoints.map((point, i) => (
+                {data.reply_points.map((point) => (
                   <Badge
-                    key={i}
+                    key={point.point_number}
                     variant="secondary"
                     className="text-xs font-normal"
                   >
-                    {i + 1}. {point}
+                    {point.point_number}. {point.move_type}
                   </Badge>
                 ))}
               </div>
             </div>
+
+            {data.prayer.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-border">
+                <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                  Prayer
+                </dt>
+                <ul className="list-decimal list-inside space-y-1 text-sm text-foreground">
+                  {data.prayer.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

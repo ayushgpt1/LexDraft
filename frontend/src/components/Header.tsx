@@ -10,10 +10,10 @@ export function Header() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Legal Affidavit Agent
+              LexDraft
             </h1>
             <p className="text-sm text-muted-foreground">
-              AI-powered Affidavit in Reply generation and evaluation
+              AI-powered Legal Affidavit Generation &amp; Evaluation Agent
             </p>
           </div>
         </div>

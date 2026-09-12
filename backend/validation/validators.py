@@ -78,76 +78,228 @@ def validate_case_number(text, case_data):
 
 
 def validate_date(text, case_data):
-    """
-    Check that the case date appears in the generated document.
-    """
-
     expected_date = case_data.date
 
-    passed = expected_date in text
+    parts = expected_date.split()
+
+    if len(parts) == 3:
+        day = int(parts[0])
+        month = parts[1]
+        year = parts[2]
+
+        if 10 <= day % 100 <= 20:
+            suffix = "th"
+        else:
+            suffix = {
+                1: "st",
+                2: "nd",
+                3: "rd"
+            }.get(day % 10, "th")
+
+        equivalent_date = f"{day}{suffix} day of {month} {year}"
+    else:
+        equivalent_date = expected_date
+
+    passed = (
+        expected_date.lower() in text.lower()
+        or equivalent_date.lower() in text.lower()
+    )
+
+    found = (
+        expected_date
+        if expected_date.lower() in text.lower()
+        else equivalent_date
+        if equivalent_date.lower() in text.lower()
+        else None
+    )
 
     return {
         "check": "Date consistency",
         "passed": passed,
         "expected": expected_date,
-        "found": expected_date if passed else None,
+        "found": found,
         "issues": []
         if passed
         else [f"Expected date '{expected_date}' was not found."]
     }
 
 
-def validate_exhibit(text):
+def normalize_exhibit_text(value):
     """
-    Check that the required Exhibit-A reference appears.
+    Normalize Unicode hyphen and quote characters so that
+    equivalent exhibit representations compare equal.
 
     Different Unicode hyphen and apostrophe characters are
     normalized so that formatting differences do not cause
     a false failure.
     """
 
-    normalized_text = (
-        text
-        .replace("\u2010", "-")
-        .replace("\u2011", "-")
-        .replace("\u2012", "-")
-        .replace("\u2013", "-")
-        .replace("\u2014", "-")
-        .replace("\u2212", "-")
-    )
+    normalized = value
 
-    normalized_text = (
-        normalized_text
-        .replace("\u2018", "'")
-        .replace("\u2019", "'")
-    )
+    for hyphen in (
+        "\u2010",
+        "\u2011",
+        "\u2012",
+        "\u2013",
+        "\u2014",
+        "\u2212"
+    ):
+        normalized = normalized.replace(hyphen, "-")
 
-    expected = "EXHIBIT-'A'"
+    for quote in ("\u2018", "\u2019"):
+        normalized = normalized.replace(quote, "'")
 
-    found = expected.lower() in normalized_text.lower()
+    return normalized
+
+
+# Exhibit reference in the supplied documents, e.g.
+# EXHIBIT-‘A’ / EXHIBIT-‘B’ / EXHIBIT-‘C’.
+#
+# The hyphen may be a Unicode hyphen and the quotes may be
+# Unicode curly quotes or ASCII quotes. The letter is
+# captured so the actual expected exhibit identifier can be
+# verified rather than merely the word EXHIBIT.
+
+EXHIBIT_PATTERN = (
+    r"EXHIBIT"
+    r"\s*"
+    r"[-‐-‒–—]"
+    r"\s*"
+    r"[‘']"
+    r"([A-Z0-9]+)"
+    r"[’']"
+)
+
+
+def validate_exhibit(text, case_data):
+    """
+    Check exhibit consistency only when the supplied case
+    information explicitly contains an exhibit reference.
+
+    The reference explanation states that exhibit references
+    are not a prescribed format requirement, so absence of an
+    exhibit in the case information must not fail this check.
+
+    When the case information does supply an exhibit, the
+    generated affidavit must contain that exact exhibit
+    identifier.
+    """
+
+    # Collect exhibit references supplied in the structured
+    # case information, primarily the reply_points content.
+    supplied_exhibits = []
+
+    for point in case_data.reply_points:
+        for content in point.content:
+            normalized_content = normalize_exhibit_text(
+                content
+            )
+
+            for match in re.finditer(
+                EXHIBIT_PATTERN,
+                normalized_content,
+                flags=re.IGNORECASE
+            ):
+                supplied_exhibits.append(
+                    match.group(1).upper()
+                )
+
+    # Case information contains NO exhibit reference.
+    # Not an error: exhibits are not universally prescribed.
+    if not supplied_exhibits:
+        return {
+            "check": "Exhibit consistency",
+            "passed": True,
+            "expected": (
+                "No exhibit reference supplied in case information."
+            ),
+            "found": None,
+            "issues": []
+        }
+
+    # Case information supplies exhibit references. Every one
+    # of them must appear in the generated affidavit, with the
+    # actual identifier verified (not merely the word EXHIBIT).
+
+    normalized_generated = normalize_exhibit_text(text)
+
+    missing = []
+
+    for identifier in supplied_exhibits:
+
+        expected = f"EXHIBIT-{identifier}"
+
+        expected_pattern = (
+            r"EXHIBIT"
+            r"\s*"
+            r"[-]"
+            r"\s*"
+            r"[‘']\s*"
+            + re.escape(identifier)
+            + r"\s*[’']"
+        )
+
+        found = re.search(
+            expected_pattern,
+            normalized_generated,
+            flags=re.IGNORECASE
+        ) is not None
+
+        if not found:
+            missing.append(expected)
 
     return {
         "check": "Exhibit consistency",
-        "passed": found,
-        "expected": expected,
-        "found": expected if found else None,
-        "issues": []
-        if found
-        else ["Required exhibit reference is missing."]
+        "passed": len(missing) == 0,
+        "expected": (
+            missing
+            if missing
+            else [
+                f"EXHIBIT-{identifier}"
+                for identifier in supplied_exhibits
+            ]
+        ),
+        "found": (
+            []
+            if missing
+            else [
+                f"EXHIBIT-{identifier}"
+                for identifier in supplied_exhibits
+            ]
+        ),
+        "issues": [
+            f"Required exhibit reference is missing: {identifier}."
+            for identifier in missing
+        ]
+        if missing
+        else []
     }
 
 
-def validate_required_sections(text):
+def validate_required_sections(text, case_data):
     """
     Check that the major required sections exist
     and appear in the expected order.
+
+    Expected values are derived from the case data so the
+    check is format-generic and not specific to one case.
     """
 
+    expected_case_number = (
+        f"{case_data.proceeding_type.upper()} NO. "
+        f"{case_data.case_number} OF {case_data.year}"
+    )
+
+    expected_affidavit_title = (
+        f"AFFIDAVIT IN REPLY ON BEHALF OF RESPONDENT NO. "
+        f"{case_data.answering_respondent_number}"
+    )
+
     required_sections = [
-        "IN THE HIGH COURT OF JUDICATURE AT BOMBAY",
-        "ORDINARY ORIGINAL CIVIL JURISDICTION",
-        "WRIT PETITION NO.",
-        "AFFIDAVIT IN REPLY ON BEHALF OF RESPONDENT NO.",
+        case_data.court.upper(),
+        case_data.jurisdiction.upper(),
+        expected_case_number,
+        expected_affidavit_title,
         "PRAYER",
         "VERIFICATION"
     ]
@@ -280,14 +432,16 @@ def run_all_validations(
     # 4. Exhibit consistency
     results.append(
         validate_exhibit(
-            generated_text
+            generated_text,
+            case_data
         )
     )
 
     # 5. Required sections and order
     results.append(
         validate_required_sections(
-            generated_text
+            generated_text,
+            case_data
         )
     )
 

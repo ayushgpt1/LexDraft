@@ -1,3 +1,4 @@
+import time
 from typing import List
 
 from pydantic import BaseModel
@@ -44,31 +45,148 @@ class AffidavitOrchestrator:
         self.generation_agent = generation_agent
         self.evaluation_agent = evaluation_agent
 
+    def _emit(
+        self,
+        progress_callback,
+        stage,
+        status,
+        message=None
+    ):
+        """
+        Forward a progress event to the supplied callback.
+
+        Events carry only the stage name, a status and an optional
+        safe message; no API keys, stack traces or exception details
+        are exposed.
+        """
+
+        if progress_callback is None:
+            return
+
+        event = {
+            "stage": stage,
+            "status": status
+        }
+
+        if message is not None:
+            event["message"] = message
+
+        progress_callback(event)
+
     def run(
         self,
         case_text,
         reference_text,
         reference_rules,
-        output_path
+        output_path,
+        progress_callback=None
     ):
-        # 1. Extract case information
-        extraction_raw = self.extraction_agent.run(case_text)
+        # Total pipeline timer: starts before the first stage and
+        # ends after the final evaluation stage.
+        total_start = time.perf_counter()
 
-        case_data = CaseInformation.model_validate_json(
-            extraction_raw
+        # 1. Extract case information
+        start = time.perf_counter()
+
+        self._emit(
+            progress_callback,
+            "extraction",
+            "processing"
+        )
+
+        try:
+            extraction_raw = self.extraction_agent.run(case_text)
+
+            case_data = CaseInformation.model_validate_json(
+                extraction_raw
+            )
+        except Exception:
+            self._emit(
+                progress_callback,
+                "extraction",
+                "error",
+                message=(
+                    "The extraction stage failed during generation."
+                )
+            )
+            raise
+
+        elapsed = time.perf_counter() - start
+        print(f"[Timing] Extraction: {elapsed:.2f}s")
+
+        self._emit(
+            progress_callback,
+            "extraction",
+            "complete"
         )
 
         # 2. Map extracted information
-        mapped_content = map_content(case_data)
+        start = time.perf_counter()
 
-        # 3. Generate affidavit paragraphs
-        generated_raw = self.generation_agent.run(
-            reference_rules,
-            mapped_content
+        self._emit(
+            progress_callback,
+            "mapping",
+            "processing"
         )
 
-        generated_paragraphs = GeneratedParagraphs.model_validate_json(
-            generated_raw
+        try:
+            mapped_content = map_content(case_data)
+        except Exception:
+            self._emit(
+                progress_callback,
+                "mapping",
+                "error",
+                message=(
+                    "The mapping stage failed during generation."
+                )
+            )
+            raise
+
+        elapsed = time.perf_counter() - start
+        print(f"[Timing] Mapping: {elapsed:.2f}s")
+
+        self._emit(
+            progress_callback,
+            "mapping",
+            "complete"
+        )
+
+        # 3. Generate affidavit paragraphs
+        start = time.perf_counter()
+
+        self._emit(
+            progress_callback,
+            "generation",
+            "processing"
+        )
+
+        try:
+            generated_raw = self.generation_agent.run(
+                reference_rules,
+                mapped_content
+            )
+
+            generated_paragraphs = GeneratedParagraphs.model_validate_json(
+                generated_raw
+            )
+        except Exception:
+            self._emit(
+                progress_callback,
+                "generation",
+                "error",
+                message=(
+                    "The generation stage failed during generation."
+                )
+            )
+            raise
+
+        elapsed = time.perf_counter() - start
+        print(f"[Timing] Generation: {elapsed:.2f}s")
+
+        self._emit(
+            progress_callback,
+            "generation",
+            "complete"
         )
 
         # 4. Build final DOCX affidavit
@@ -82,26 +200,84 @@ class AffidavitOrchestrator:
         generated_text = extract_docx_text(output_path)
 
         # 6. Run deterministic validation
-        validation_results = run_all_validations(
-            case_data,
-            generated_text,
-            generated_paragraphs
+        start = time.perf_counter()
+
+        self._emit(
+            progress_callback,
+            "validation",
+            "processing"
         )
 
-        deterministic_score = calculate_deterministic_score(
-            validation_results
+        try:
+            validation_results = run_all_validations(
+                case_data,
+                generated_text,
+                generated_paragraphs
+            )
+
+            deterministic_score = calculate_deterministic_score(
+                validation_results
+            )
+        except Exception:
+            self._emit(
+                progress_callback,
+                "validation",
+                "error",
+                message=(
+                    "The validation stage failed during generation."
+                )
+            )
+            raise
+
+        elapsed = time.perf_counter() - start
+        print(f"[Timing] Validation: {elapsed:.2f}s")
+
+        self._emit(
+            progress_callback,
+            "validation",
+            "complete"
         )
 
         # 7. Run LLM evaluation
-        evaluation_raw = self.evaluation_agent.run(
-            case_data=case_data,
-            reference_text=reference_text,
-            generated_text=generated_text
+        start = time.perf_counter()
+        self._emit(
+            progress_callback,
+            "evaluation",
+            "processing"
         )
 
-        evaluation_report = EvaluationReport.model_validate_json(
-            evaluation_raw
+        try:
+            evaluation_raw = self.evaluation_agent.run(
+                case_data=case_data,
+                reference_text=reference_text,
+                generated_text=generated_text
+            )
+
+            evaluation_report = EvaluationReport.model_validate_json(
+                evaluation_raw
+            )
+        except Exception:
+            self._emit(
+                progress_callback,
+                "evaluation",
+                "error",
+                message=(
+                    "The evaluation stage failed during generation."
+                )
+            )
+            raise
+
+        elapsed = time.perf_counter() - start
+        print(f"[Timing] Evaluation: {elapsed:.2f}s")
+
+        self._emit(
+            progress_callback,
+            "evaluation",
+            "complete"
         )
+
+        total_elapsed = time.perf_counter() - total_start
+        print(f"[Timing] Total pipeline: {total_elapsed:.2f}s")
 
         # 8. Build final evaluation report
         final_report = FinalEvaluationReport(

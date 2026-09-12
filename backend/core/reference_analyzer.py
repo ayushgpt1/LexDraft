@@ -39,7 +39,12 @@ reference_rules = {
         "second": "BLANKET_DENIAL",
         "third": "PRELIMINARY_POSITION",
         "middle": "SUBSTANTIVE_ANSWER",
-        "last": "CLOSING"
+        "last": "CLOSING",
+        "closing_form": (
+            "In the premises aforesaid, I say that the "
+            "[PROCEEDING TYPE] deserves to be dismissed with costs."
+        ),
+        "closing_is_not_a_request": True
     },
 
     "prayer": {

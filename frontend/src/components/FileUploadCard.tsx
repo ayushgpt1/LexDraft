@@ -4,21 +4,41 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { UploadedFile } from '@/lib/types';
 
-interface CaseInformationUploadProps {
+interface FileUploadCardProps {
+  title: string;
+  description: string;
+  uploadLabel: string;
   file: UploadedFile;
+  disabled?: boolean;
   onFileSelected: (file: File) => void;
+  onInvalidFile: (fileName: string) => void;
 }
 
-export function CaseInformationUpload({
+function isPdf(file: File): boolean {
+  return (
+    file.type === 'application/pdf' ||
+    file.name.toLowerCase().endsWith('.pdf')
+  );
+}
+
+export function FileUploadCard({
+  title,
+  description,
+  uploadLabel,
   file,
+  disabled = false,
   onFileSelected,
-}: CaseInformationUploadProps) {
+  onInvalidFile,
+}: FileUploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFile = (f: File) => {
-    if (f && f.type === 'application/pdf') {
+    if (disabled || !f) return;
+    if (isPdf(f)) {
       onFileSelected(f);
+    } else {
+      onInvalidFile(f.name);
     }
   };
 
@@ -30,18 +50,14 @@ export function CaseInformationUpload({
     >
       <CardContent className="p-6">
         <div className="mb-4">
-          <h3 className="text-base font-semibold text-foreground">
-            Case Information
-          </h3>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Upload the case information document
-          </p>
+          <h3 className="text-base font-semibold text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
         </div>
 
         <div
           onDragOver={(e) => {
             e.preventDefault();
-            setIsDragging(true);
+            if (!disabled) setIsDragging(true);
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={(e) => {
@@ -76,7 +92,7 @@ export function CaseInformationUpload({
                 <Upload className="h-6 w-6 text-muted-foreground" />
               </div>
               <p className="text-xs text-muted-foreground">
-                Drag & drop PDF or click to browse
+                Drag &amp; drop PDF or click to browse
               </p>
             </div>
           )}
@@ -87,17 +103,20 @@ export function CaseInformationUpload({
           type="file"
           accept="application/pdf"
           className="hidden"
+          disabled={disabled}
           onChange={(e) => {
             if (e.target.files?.[0]) handleFile(e.target.files[0]);
+            e.target.value = '';
           }}
         />
 
         <Button
           variant={file ? 'outline' : 'default'}
           className="mt-4 w-full"
+          disabled={disabled}
           onClick={() => inputRef.current?.click()}
         >
-          {file ? 'Replace PDF' : 'Upload Case Information PDF'}
+          {file ? 'Replace PDF' : uploadLabel}
         </Button>
       </CardContent>
     </Card>

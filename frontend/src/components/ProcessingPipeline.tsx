@@ -1,4 +1,4 @@
-import { Check, Loader2, Circle } from 'lucide-react';
+import { AlertCircle, Check, Loader2, Circle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { PipelineStage } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,8 @@ export function ProcessingPipeline({ stages }: ProcessingPipelineProps) {
                         'border-success bg-success text-success-foreground',
                       stage.status === 'processing' &&
                         'border-accent bg-accent text-accent-foreground',
+                      stage.status === 'error' &&
+                        'border-destructive bg-destructive text-destructive-foreground',
                       stage.status === 'pending' &&
                         'border-border bg-card text-muted-foreground'
                     )}
@@ -36,6 +38,9 @@ export function ProcessingPipeline({ stages }: ProcessingPipelineProps) {
                     )}
                     {stage.status === 'processing' && (
                       <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    {stage.status === 'error' && (
+                      <AlertCircle className="h-4 w-4" />
                     )}
                     {stage.status === 'pending' && (
                       <Circle className="h-3 w-3" />
@@ -58,6 +63,7 @@ export function ProcessingPipeline({ stages }: ProcessingPipelineProps) {
                       'text-sm font-medium transition-colors',
                       stage.status === 'completed' && 'text-foreground',
                       stage.status === 'processing' && 'text-foreground',
+                      stage.status === 'error' && 'text-foreground',
                       stage.status === 'pending' && 'text-muted-foreground'
                     )}
                   >
@@ -65,11 +71,19 @@ export function ProcessingPipeline({ stages }: ProcessingPipelineProps) {
                   </p>
                   {stage.status === 'processing' && (
                     <p className="text-xs text-muted-foreground mt-0.5 animate-pulse-soft">
-                      Processing...
+                      Processing
                     </p>
                   )}
                   {stage.status === 'completed' && (
                     <p className="text-xs text-success mt-0.5">Complete</p>
+                  )}
+                  {stage.status === 'error' && (
+                    <p className="text-xs text-destructive mt-0.5">Error</p>
+                  )}
+                  {stage.status === 'pending' && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Waiting
+                    </p>
                   )}
                 </div>
               </div>

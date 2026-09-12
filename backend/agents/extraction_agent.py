@@ -1,5 +1,8 @@
 import json
 
+from google.genai import types
+
+from backend.core.llm_output import clean_json_output
 from backend.models.schemas import CaseInformation
 
 
@@ -38,21 +41,17 @@ Extract the structured case information from this document:
 --- END DOCUMENT ---
 """
 
-        response = self.client.chat.completions.create(
+        response = self.client.models.generate_content(
             model=self.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
+            contents=[
+                user_prompt
             ],
-            temperature=0
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=0
+            )
         )
 
-        raw_output = response.choices[0].message.content
+        raw_output = response.text
 
-        return raw_output
+        return clean_json_output(raw_output)
