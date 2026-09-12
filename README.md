@@ -259,12 +259,10 @@ The web UI is available at `http://localhost:5173`.
 
 ## 10. Generated Outputs
 
-| File                                      | Description                                              |
-|-------------------------------------------|----------------------------------------------------------|
-| `outputs/generated_affidavit.docx`        | The generated Affidavit in Reply (formatted DOCX).       |
-| `outputs/evaluation_report.json`          | LLM evaluation report (5 dimensions + overall score).    |
-| `outputs/case_information.pdf`            | Last uploaded case-information PDF.                      |
-| `outputs/reference.pdf`                   | Last uploaded reference PDF.                             |
+| File                                      | Description                                           |
+|-------------------------------------------|-------------------------------------------------------|
+| `outputs/generated_affidavit.docx`        | The generated Affidavit in Reply (formatted DOCX).   |
+| `outputs/evaluation_report.json`          | LLM evaluation report (5 dimensions + overall score). |
 
 The DOCX contains, in order: forum heading, jurisdiction, case number, cause title, affidavit
 title, deponent clause, numbered body paragraphs, prayer (a/b/c), jurat, verification, and an
@@ -334,20 +332,20 @@ Each dimension is scored 0–100 with a list of specific issues. An overall scor
 - **Multi-case / batch processing** — One case is processed per generation request.
 - **User authentication / authorisation** — No login, accounts, or access control.
 - **Database persistence** — No long-term storage; only the latest outputs are retained.
-- **Deployment** — The application is deployed using Render Free services. The free deployment may spin down after periods of inactivity.
+- **Deployment** — The application is deployed using Render Free services. The free deployment may
+  spin down after periods of inactivity.
 
 ---
 
 ## 14. Known Limitations
 
-- Requires an internet connection and a valid Gemini API key to run.
+- The local development setup requires an internet connection and a valid Gemini API key.
 - Generation quality depends on the underlying LLM; occasional hallucinations or omissions may occur
   and should be reviewed by a human.
 - Only the **Affidavit in Reply** document type is supported.
 - Only **PDF** inputs are accepted for the case information and reference documents.
 - The frontend sends the preloaded `01 Affidavit Format Explained.pdf` as the reference file; the
   sample affidavit (`02 Affidavit in Reply Sample.docx.pdf`) is display-only.
-
 ---
 
 ## 15. Demo / Working Link
