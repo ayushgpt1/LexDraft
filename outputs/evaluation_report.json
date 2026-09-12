@@ -1,0 +1,24 @@
+{
+  "overall_score": 100,
+  "entity_accuracy": {
+    "score": 100,
+    "issues": []
+  },
+  "completeness": {
+    "score": 100,
+    "issues": []
+  },
+  "semantic_faithfulness": {
+    "score": 100,
+    "issues": []
+  },
+  "hallucination": {
+    "score": 100,
+    "issues": []
+  },
+  "template_fidelity": {
+    "score": 100,
+    "issues": []
+  },
+  "overall_issues": []
+}

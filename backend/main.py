@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -220,12 +221,30 @@ async def generate_affidavit(
                 except Exception:
                     pass
 
+        # Persist the actual evaluation result returned by the
+        # EvaluationAgent (reused as-is; no second evaluation and no
+        # additional LLM call). The outputs directory is created on
+        # demand so the artifact always has a valid JSON home.
+        evaluation_report = result["evaluation_report"].model_dump()
+
+        OUTPUT_DIR.mkdir(exist_ok=True)
+
+        evaluation_report_path = OUTPUT_DIR / "evaluation_report.json"
+
+        evaluation_report_path.write_text(
+            json.dumps(
+                evaluation_report,
+                indent=2
+            ),
+            encoding="utf-8"
+        )
+
     return {
         "message": "Affidavit generated successfully",
         "download_url": "/download",
         "deterministic_score": result["deterministic_score"],
         "validation_results": result["validation_results"],
-        "evaluation_report": result["evaluation_report"].model_dump(),
+        "evaluation_report": evaluation_report,
         "case_data": result["case_data"].model_dump(),
         "generated_paragraphs": (
             result["generated_paragraphs"].model_dump()
