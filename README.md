@@ -139,9 +139,6 @@ LexDraft/
 │   │   └── schemas.py              # Pydantic models: CaseInformation, EvaluationReport, etc.
 │   ├── validation/
 │   │   └── validators.py           # 7 deterministic checks + score calculation
-│   ├── tests_smoke.py              # Deterministic smoke test (no LLM)
-│   ├── tests_result.py             # Analyses a saved /generate result
-│   └── tests_visual.py             # Visual/formatting checks on the smoke-test DOCX
 ├── frontend/
 │   ├── public/reference/
 │   │   ├── 01 Affidavit Format Explained.pdf   # Preloaded reference (sent to backend)
@@ -354,7 +351,6 @@ Each dimension is scored 0–100 with a list of specific issues. An overall scor
 - Only **PDF** inputs are accepted for the case information and reference documents.
 - The frontend sends the preloaded `01 Affidavit Format Explained.pdf` as the reference file; the
   sample affidavit (`02 Affidavit in Reply Sample.docx.pdf`) is display-only.
-- The deterministic smoke test uses mock paragraphs and does not invoke the LLM.
 
 ---
 
@@ -386,5 +382,3 @@ This project was developed as part of the **Brainwonders AI Internship** assignm
 demonstration prototype for educational purposes only. It does not constitute legal advice and is not
 a substitute for review by a qualified legal professional. The generated affidavit outputs should be
 verified by a human before any real-world use.
-
-| Testing     | Custom smoke / result / visual test scripts (no LLM required for smoke)    |
