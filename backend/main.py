@@ -27,12 +27,14 @@ app = FastAPI(
 # Allow the React frontend to communicate with the backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://lexdraft-frontend-wafl.onrender.com",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Output directory for generated affidavits
 OUTPUT_DIR = Path("outputs")
