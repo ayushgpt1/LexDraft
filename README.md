@@ -16,7 +16,7 @@ Drafting an Affidavit in Reply requires:
 - Mapping that information to the structural and linguistic conventions of a prescribed affidavit format.
 - Generating the numbered body paragraphs faithfully — without introducing unsupported facts.
 - Assembling a complete, correctly formatted affidavit (forum heading, cause title, deponent clause,
-  numbered paragraphs, prayer, jurat, verification, and optional advocate block).
+  numbered paragraphs, prayer, jurat, verification, and advocate block).
 - Validating the output for structural and factual correctness.
 - Evaluating the output for entity accuracy, completeness, semantic faithfulness, hallucination, and
   template fidelity.
@@ -51,9 +51,6 @@ end-to-end while keeping the generated content grounded in the supplied case inf
 The system is split into a **FastAPI backend** and a **React frontend**.
 
 ![System Architecture](docs/architecture.png)
-
-> **Note:** The architecture diagram above is a placeholder. The actual diagram will be added
-> separately to `docs/architecture.png`. It is not included in the current repository.
 
 ### High-level data flow
 
@@ -161,8 +158,6 @@ LexDraft/
 ├── outputs/                        # Generated artifacts (created at runtime)
 │   ├── generated_affidavit.docx
 │   ├── evaluation_report.json
-│   ├── case_information.pdf        # Last uploaded case PDF
-│   └── reference.pdf               # Last uploaded reference PDF
 ├── .env                            # GEMINI_API_KEY (git-ignored)
 ├── .env.example                    # Env-var template
 └── .gitignore
@@ -339,7 +334,7 @@ Each dimension is scored 0–100 with a list of specific issues. An overall scor
 - **Multi-case / batch processing** — One case is processed per generation request.
 - **User authentication / authorisation** — No login, accounts, or access control.
 - **Database persistence** — No long-term storage; only the latest outputs are retained.
-- **Production deployment** — The application is configured for local development only.
+- **Deployment** — The application is deployed using Render Free services. The free deployment may spin down after periods of inactivity.
 
 ---
 
@@ -357,7 +352,7 @@ Each dimension is scored 0–100 with a list of specific issues. An overall scor
 
 ## 15. Demo / Working Link
 
-> Live demo link: *[placeholder — add when deployed]*
+> Live demo: https://lexdraft-frontend-wafl.onrender.com
 
 
 ---
