@@ -414,7 +414,8 @@ Each dimension is scored 0–100 with a list of specific issues. An overall scor
 
 ## 16. Video Demonstration
 
-> Video walkthrough: *[placeholder — add when recorded]*
+> Video walkthrough: 
+(https://drive.google.com/file/d/1XREP5qbErJ58UM8Vm2nCnMZyITkmQ39N/view?usp=sharing)
 
 ---
 
