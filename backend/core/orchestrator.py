@@ -79,7 +79,9 @@ class AffidavitOrchestrator:
         reference_text,
         reference_rules,
         output_path,
-        progress_callback=None
+        progress_callback=None,
+        reference_format_path=None,
+        reference_sample_path=None
     ):
         # Total pipeline timer: starts before the first stage and
         # ends after the final evaluation stage.
@@ -119,6 +121,34 @@ class AffidavitOrchestrator:
             "extraction",
             "complete"
         )
+
+        # Analyze format explained if a user-supplied path is provided
+        # This allows the rules to be derived from the uploaded document
+        # instead of using only the hardcoded defaults.
+        if reference_format_path is not None:
+            from backend.core.reference_analyzer import (
+                analyze_format_explained,
+                extract_pdf_text as extract_text
+            )
+            format_text = extract_text(reference_format_path)
+            reference_rules = analyze_format_explained(format_text)
+
+        # Analyze sample affidavit if a user-supplied path is provided
+        # This allows pattern analysis from the uploaded sample
+        sample_text = None
+        if reference_sample_path is not None:
+            from backend.core.reference_analyzer import (
+                get_selected_sample_text,
+                extract_pdf_text as extract_text
+            )
+            sample_text = get_selected_sample_text(reference_sample_path)
+            if sample_text is None:
+                sample_text = extract_text(reference_sample_path)
+
+        # Pass sample info to generation if available (makes it available
+        # for any future agent enhancements without breaking existing behavior)
+        if sample_text:
+            reference_rules['_sample_text_for_analysis'] = sample_text
 
         # 2. Map extracted information
         start = time.perf_counter()

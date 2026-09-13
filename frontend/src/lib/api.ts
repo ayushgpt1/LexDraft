@@ -68,18 +68,34 @@ export async function loadPreloadedReferenceFile(): Promise<File> {
 }
 
 /**
- * POST /generate — multipart/form-data with exactly
- * `reference_file` and `case_file` (both PDFs). An optional run id
- * associates the request with an open /ws/progress WebSocket.
+ * POST /generate — multipart/form-data.
+ *
+ * Supports configurable reference materials per generation run:
+ * - `format_file` (optional): Uploaded Format Explained PDF. If omitted,
+ *   the default bundled "01 Affidavit Format Explained.pdf" is used.
+ * - `sample_file` (optional): Uploaded Sample Affidavit PDF. If omitted,
+ *   the default bundled "02 Affidavit in Reply Sample.docx.pdf" is used.
+ * - `case_file` (required): Case Information PDF.
+ *
+ * A `run_id` query parameter associates the request with an open
+ * /ws/progress WebSocket for live progress updates.
  */
 export async function generateAffidavit(
-  referenceFile: File,
   caseFile: File,
+  formatFile?: File,
+  sampleFile?: File,
   runId?: string
 ): Promise<GenerateResponse> {
   const formData = new FormData();
-  formData.append('reference_file', referenceFile);
   formData.append('case_file', caseFile);
+
+  if (formatFile) {
+    formData.append('format_file', formatFile);
+  }
+
+  if (sampleFile) {
+    formData.append('sample_file', sampleFile);
+  }
 
   const query = runId ? `?run_id=${encodeURIComponent(runId)}` : '';
 

@@ -140,24 +140,65 @@ async def progress_websocket(
 
 @app.post("/generate")
 async def generate_affidavit(
-    reference_file: UploadFile = File(...),
+    reference_file: UploadFile = File(None),
+    format_file: UploadFile = File(None),
+    sample_file: UploadFile = File(None),
     case_file: UploadFile = File(...),
     run_id: str = Query(default="")
 ):
-    reference_path = OUTPUT_DIR / "reference.pdf"
-    case_path = OUTPUT_DIR / "case_information.pdf"
+    # Output paths
     output_path = OUTPUT_DIR / "generated_affidavit.docx"
 
-    reference_path.write_bytes(
-        await reference_file.read()
-    )
-
-    case_path.write_bytes(
-        await case_file.read()
-    )
-
-    reference_text = extract_pdf_text(reference_path)
+    # Case information is always required
+    case_path = OUTPUT_DIR / "case_information.pdf"
+    case_path.write_bytes(await case_file.read())
     case_text = extract_pdf_text(case_path)
+
+    # Determine which reference files to use
+    # Priority: uploaded files > default files
+    from backend.core.reference_analyzer import (
+        DEFAULT_FORMAT_PATH,
+        DEFAULT_SAMPLE_PATH
+    )
+
+    # Handle Format Explained file
+    if format_file is not None:
+        format_path = OUTPUT_DIR / "format_explained.pdf"
+        format_path.write_bytes(await format_file.read())
+        reference_format_path = str(format_path)
+    else:
+        # Use default Format Explained
+        reference_format_path = DEFAULT_FORMAT_PATH
+
+    # Handle Sample Affidavit file
+    if sample_file is not None:
+        sample_path = OUTPUT_DIR / "sample_affidavit.pdf"
+        sample_path.write_bytes(await sample_file.read())
+        reference_sample_path = str(sample_path)
+    else:
+        # No sample uploaded; do not load the default sample.
+        # The default sample was not loaded before the reference-selection
+        # feature, so this preserves the prior behavior exactly.
+        reference_sample_path = None
+
+    # For backward compatibility, if reference_file is provided,
+    # it overrides both format and sample (legacy behavior)
+    if reference_file is not None:
+        reference_path = OUTPUT_DIR / "reference.pdf"
+        reference_path.write_bytes(await reference_file.read())
+        reference_text = extract_pdf_text(reference_path)
+        reference_format_path = None  # Don't analyze separately
+        reference_sample_path = None   # Don't analyze separately
+    else:
+        # Extract reference text from Format Explained for the pipeline
+        # (the sample is used for pattern analysis, not as reference_text)
+        format_path = OUTPUT_DIR / "format_explained.pdf" if format_file else None
+        if format_path and format_path.exists():
+            reference_text = extract_pdf_text(format_path)
+        elif reference_format_path == DEFAULT_FORMAT_PATH:
+            reference_text = extract_pdf_text(reference_format_path)
+        else:
+            reference_text = ""
 
     # Progress reporting is optional: when a run id is supplied the
     # orchestrator runs in a worker thread (its LLM calls block) and
@@ -205,7 +246,9 @@ async def generate_affidavit(
             reference_text=reference_text,
             reference_rules=reference_rules,
             output_path=str(output_path),
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
+            reference_format_path=reference_format_path,
+            reference_sample_path=reference_sample_path
         )
     finally:
 

@@ -90,6 +90,8 @@ function App() {
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFormatFile, setSelectedFormatFile] = useState<File | null>(null);
+  const [selectedSampleFile, setSelectedSampleFile] = useState<File | null>(null);
 
   const isProcessing = appState === 'processing';
   const canGenerate = caseFile !== null && !isProcessing;
@@ -162,11 +164,18 @@ function App() {
     }
 
     try {
-      // POST /generate takes a single reference_file field; the
-      // preloaded format/structural rules document is sent as that
-      // field. The run id associates this request with the socket.
-      const referenceFile = await loadPreloadedReferenceFile();
-      const response = await generateAffidavit(referenceFile, caseFile, runId);
+      // POST /generate supports configurable reference materials:
+      // - format_file (optional): custom Format Explained PDF
+      // - sample_file (optional): custom Sample Affidavit PDF
+      // - case_file (required): Case Information PDF
+      // If format_file or sample_file are omitted, the default bundled
+      // reference documents are used automatically.
+      const response = await generateAffidavit(
+        caseFile,
+        selectedFormatFile || undefined,
+        selectedSampleFile || undefined,
+        runId
+      );
       setResult(response);
       setStages((prev) =>
         prev.map((stage) => ({ ...stage, status: 'completed' as const }))
@@ -228,7 +237,12 @@ function App() {
           )}
 
           <div className="space-y-4">
-            <ReferenceDocuments />
+            <ReferenceDocuments
+              formatFile={selectedFormatFile}
+              sampleFile={selectedSampleFile}
+              onFormatChange={setSelectedFormatFile}
+              onSampleChange={setSelectedSampleFile}
+            />
 
             <FileUploadCard
               title="Case Information"
@@ -262,8 +276,8 @@ function App() {
 
           {!canGenerate && appState === 'idle' && (
             <p className="text-center text-xs text-muted-foreground mt-3">
-              Upload the Case Information PDF to enable generation — the
-              reference documents are preloaded
+              Upload the Case Information PDF to enable generation — default
+              reference materials are used unless you replace them above
             </p>
           )}
         </section>
