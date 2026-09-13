@@ -1,4 +1,19 @@
-﻿reference_rules = {
+﻿import pymupdf
+
+
+def extract_pdf_text(file_path):
+    doc = pymupdf.open(file_path)
+
+    pages = []
+
+    for page in doc:
+        pages.append(page.get_text())
+
+    doc.close()
+
+    return "\n".join(pages) 
+
+reference_rules = {
     "document_type": "Affidavit in Reply",
 
     "court_format": {
