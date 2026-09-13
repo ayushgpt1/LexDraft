@@ -41,8 +41,7 @@ Extract the structured case information from this document:
 --- END DOCUMENT ---
 """
 
-        response = self.client.models.generate_content(
-            model=self.model,
+        response = self.client.generate_content(
             contents=[
                 user_prompt
             ],

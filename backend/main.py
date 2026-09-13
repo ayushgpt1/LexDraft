@@ -8,8 +8,7 @@ from fastapi import FastAPI, File, Query, UploadFile, WebSocket, WebSocketDiscon
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from google import genai
-
+from backend.core.llm_client import ResilientGeminiClient
 from backend.agents.extraction_agent import ExtractionAgent
 from backend.agents.generation_agent import GenerationAgent
 from backend.agents.evaluation_agent import EvaluationAgent
@@ -48,7 +47,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # the API recommends gemini-3.6-flash (verified live with this key).
 MODEL_NAME = "gemini-3.6-flash"
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = ResilientGeminiClient(api_key=GEMINI_API_KEY)
 
 
 # Agents

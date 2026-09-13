@@ -113,8 +113,7 @@ MAPPED CASE INFORMATION:
 {json.dumps(mapped_content, indent=2)}
 """
 
-        response = self.client.models.generate_content(
-            model=self.model,
+        response = self.client.generate_content(
             contents=[
                 system_prompt
             ],
